@@ -1,0 +1,1096 @@
+//
+//  RSMainViewController.m
+//  ResortSuite
+//
+//  Created by Cybage on 5/30/11.
+//  Copyright 2011 ResortSuite . All rights reserved.
+// 
+
+#import "RSMainViewController.h"
+#import "RSMIMainScreenViewController.h"
+#import "RSMGMainScreenController.h"
+#import "RSTableView.h"
+#import "MapViewController.h"
+#import "Authentication.h"
+#import "RSMyItineraryParser.h"
+#import "RSConnection.h"
+#import "RSDetailsPageViewController.h"
+#import "ResortSuiteAppDelegate.h"
+#import "RSClubAccounts.h"
+#import "RSMyAccountParser.h"
+#import "RSAccountActivityViewController.h"
+#import "RSClubBillingHistoryParser.h"
+#import "DisplaySplashScreenViewController.h"
+
+#import "RSListAccountsViewController.h"
+
+#import "ErrorPopup.h"
+#import "RSListViewNode.h"
+#import "RSListViewController.h"
+#import "DateFormatting.h"
+#import "SoapRequests.h"
+#import "RSNavigationController.h"
+#import "RSMIDateScreenViewController.h"
+//For Bookings
+#import "RSBookingsMainVC.h"
+#import "LogoutScreen.h"
+
+#import "RSMIDateSelectionViewController.h" //for both hotel and club
+
+#import "ChangePassword.h"
+@implementation RSMainViewController
+
+@synthesize parserItineraryObj;
+@synthesize isMyItinerary;
+@synthesize isRefresh;
+@synthesize responseString;
+@synthesize documentDirPath;
+
+//  for hotel only remove
+	@synthesize folioid;
+	@synthesize guestpin;
+
+//---------********************************************--------------------------
+//authentication flow are same in the hotel and club App.
+
+@synthesize emailAddress;
+@synthesize password;
+@synthesize customerId;
+@synthesize customerGUID;
+@synthesize startDate;
+@synthesize endDate;
+@synthesize authorizationId;
+//---------********************************************--------------------------
+@synthesize parserMyAccObj;
+@synthesize isClubMyItinerary;
+@synthesize isClubMyAccount;
+@synthesize isMyHotelOrClub;
+
+@synthesize splashVC;
+@synthesize isSignIn;
+
+#pragma mark -
+#pragma mark View lifecycle
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+	self.view.autoresizesSubviews = YES;
+	
+	isMyItinerary = NO;
+	UIBarButtonItem* item = [[UIBarButtonItem alloc] initWithTitle:BackButtonTitle style:UIBarButtonItemStylePlain target:nil action:nil];
+	self.navigationItem.backBarButtonItem = item;
+	[ResortSuiteAppDelegate setContactUsIcon:YES];
+
+	if (self.navigationController.delegate == nil) {
+		[self.navigationController setDelegate:self];
+	}
+	[item release];
+	
+	#if defined(HOTEL_VERSION)
+		self.navigationItem.title = Hotel_Application_Title;
+	#elif defined(CLUB_VERSION)	
+		self.navigationItem.title = Club_Application_Title;
+	#endif
+	
+	UIImageView *imageViewBackgroud = [[UIImageView alloc] initWithFrame:CGRectMake(0,0, Screen_Width, Screen_Height)];
+	imageViewBackgroud.image = [UIImage imageNamed:Application_HomeScreen];
+	[self.view addSubview:imageViewBackgroud];
+	[imageViewBackgroud release];
+	
+    appDelegate = (ResortSuiteAppDelegate *) [[UIApplication sharedApplication] delegate];
+	appDelegate.mainVC = self;
+    
+	[self createMenuButtons];
+	
+	// Get documents directory
+	NSArray *arrayPaths = NSSearchPathForDirectoriesInDomains(
+															  NSDocumentDirectory,
+															  NSUserDomainMask,
+															  YES);
+	self.documentDirPath = [arrayPaths objectAtIndex:0];
+}	
+
+-(RSListViewNode *)createFirstListViewNode:(NSString*) treeName
+{
+	//read the infoplist in to the node;
+	NSString *plistPath = [[NSBundle mainBundle] pathForResource:treeName ofType:@"plist"];	
+	NSDictionary *dictionary = [[NSDictionary alloc]initWithContentsOfFile:plistPath];
+	RSListViewNode *node = [[RSListViewNode alloc]initWithTitle:[dictionary objectForKey:Plist_Title_Key]
+									HeaderImage:[dictionary objectForKey:Plist_Header_Image_Key] 
+									  IConImage:[dictionary objectForKey:Plist_Thumbnail_Image_Key]
+									  NodeArray:[dictionary objectForKey:Plist_DictionaryArray_Key]];
+	[node autorelease];
+	[dictionary release];
+	return node;
+}
+
+-(void) createMenuButtons
+{
+	for(int menubuttonindex=0; menubuttonindex<MainScreen_NoButtons; menubuttonindex++) {		
+		mainViewButttons[menubuttonindex] = [RSMainScreenButton buttonWithType:UIButtonTypeCustom];
+		[mainViewButttons[menubuttonindex] createCustomMenuButtons:menubuttonindex];
+		[mainViewButttons[menubuttonindex] addTarget:self action:@selector(CallNextController:) forControlEvents:UIControlEventTouchUpInside];
+
+		[self.view addSubview:mainViewButttons[menubuttonindex]];
+        //prev released in dealloc
+        [mainViewButttons[menubuttonindex] release];
+	}
+}
+
+#pragma mark navigationControllerDelegate
+- (void)navigationController:(UINavigationController *)navigationController willShowViewController:(UIViewController *)viewController animated:(BOOL)animated
+{
+//	//---------------ADDING REFRESH BUTTON-----------------
+//	#if defined(HOTEL_VERSION)
+//	if ([viewController isKindOfClass:[RSMIMainScreenViewController class]] || [viewController isKindOfClass:[RSMGMainScreenController class]])
+//	{
+//		UIBarButtonItem *modalButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh 
+//																					 target:self 
+//																					 action:@selector(refreshButtonAction:)];		
+//		
+//		[viewController.navigationItem setRightBarButtonItem:modalButton animated:YES];
+//		[modalButton release];
+//	}
+//	else 
+//	#endif
+	//---------------ADDING SignIn/Out BUTTON-----------------
+		[self showUpdatedLoginButton:appDelegate.isLoggedIn onController:viewController];
+}
+
+-(void)signInOutButtonAction:(id)sender
+{
+	shouldLoadIntinerayView = NO;
+	shouldLoadMyAccountView = NO;
+	
+	if(appDelegate.isLoggedIn) {
+		[self showLogoutAlert];
+	}
+	else if	(appDelegate.connectedToInternet) {
+		[self showLoginPopup];
+	}
+	else {
+		ErrorPopup *errorPopup = [ErrorPopup sharedInstance];
+		[errorPopup initWithTitle:@"No network"];
+	}
+}
+	
+
+
+-(void) showUpdatedLoginButton:(BOOL) isSignedIn onController:(UIViewController *) viewController
+{
+	UIButton *signInOutButton = [UIButton buttonWithType:UIButtonTypeCustom];
+	
+	if (!appDelegate.isLoggedIn) {//if (isSignedIn) { for logged out state
+		[signInOutButton setBackgroundImage:[UIImage imageNamed:RSSignInBtn] forState:UIControlStateNormal];
+	}
+	else if(appDelegate.isLoggedIn){//else {
+		[signInOutButton setBackgroundImage:[UIImage imageNamed:RSSignOutBtn] forState:UIControlStateNormal];
+	}
+	
+	signInOutButton.frame = CGRectMake(270, 15, 30, 30);
+	[signInOutButton addTarget:self action:@selector(signInOutButtonAction:) forControlEvents:UIControlEventTouchUpInside];
+	
+	UIBarButtonItem *modalButton = [[UIBarButtonItem alloc] initWithCustomView:signInOutButton];
+	
+	if ( !([viewController isKindOfClass:[MapViewController class]]) ) // && [ResortSuiteAppDelegate getContactUsIcon]
+	{
+		[viewController.navigationItem setRightBarButtonItem:modalButton animated:YES];
+	}
+	[modalButton release];
+	
+	viewController.navigationController.navigationBar.userInteractionEnabled = YES;	
+}
+
+
+-(IBAction) CallNextController:(id) button
+{
+    DLog(@"flow through button");
+	UIButton* currentButton = (UIButton*)button;
+	
+	switch (currentButton.tag) 
+	{
+		case MainScreen_Button1:
+			 [self firstButtonHandler];			
+		     break;
+			
+		#if !defined CLUB_VERSION_TWO_MYACCOUNT
+		case MainScreen_Button2:
+			[self secondButtonHandler];				
+			break;
+		#endif
+			
+		#if !defined HOTEL_VERSION_TWO_BUTTONS			
+		case MainScreen_Button3:			
+			[self thirdButtonHandler];
+			break;
+		#endif
+	}
+}
+
+#pragma mark Main Screen Button Event handling
+
+-(void) firstButtonHandler
+{
+	isMyHotelOrClub = YES;	
+	shouldLoadIntinerayView = NO;
+	isClubMyItinerary = NO;
+	isClubMyAccount = NO;
+	
+	RSListViewController *firstListController = [[RSListViewController alloc]initViewWithNode:[self createFirstListViewNode:@"ProjectTree"]];
+	[self.navigationController pushViewController:firstListController animated:YES];
+	[firstListController release];	
+}
+
+-(void) secondButtonHandler
+{
+#if defined ALL_VERSIONS_SECOND_STATIC_MYACCOUNT
+    isMyHotelOrClub = YES;	
+    shouldLoadIntinerayView = NO;
+    isClubMyItinerary = NO;
+    isClubMyAccount = NO;
+	
+    RSListViewController *firstListController = [[RSListViewController alloc]initViewWithNode:[self createFirstListViewNode:@"ProjectTreeSecondStatic"]];
+    [self.navigationController pushViewController:firstListController animated:YES];
+    [firstListController release];		
+#else
+
+	isMyHotelOrClub = NO;
+	isMyItinerary = YES;
+	shouldLoadIntinerayView = YES;
+	
+	if (appDelegate.isLoggedIn == YES) {
+		NSUserDefaults *prefs = [NSUserDefaults standardUserDefaults];
+			
+		#if defined(HOTEL_VERSION)
+			self.folioid = [prefs stringForKey:@"FolioId"];
+			self.guestpin = [prefs stringForKey:@"GuestPin"];
+		#elif defined(CLUB_VERSION)
+
+		#endif
+        //------------comman in both club and hotel app
+        self.emailAddress = [prefs stringForKey:EmailAddressKey];
+        self.password = [prefs stringForKey:PasswordKey];					
+        self.customerId = [prefs stringForKey:CustomerIdKey];
+        self.customerGUID = [prefs stringForKey:CustomerGUIDKey];
+        //------------
+			[self loadDateViewCotroller];
+	}
+	else {
+		if(appDelegate.connectedToInternet) {
+			isClubMyItinerary = YES;
+			[self showLoginPopup];	
+		}
+		else {
+			[self showOfflineAlert];
+		}
+	}
+#endif
+}
+
+-(void) thirdButtonHandler
+{
+	#if defined ALL_VERSIONS_SECOND_STATIC
+		isMyHotelOrClub = YES;	
+		shouldLoadIntinerayView = NO;
+		isClubMyItinerary = NO;
+		isClubMyAccount = NO;
+	
+		RSListViewController *firstListController = [[RSListViewController alloc]initViewWithNode:[self createFirstListViewNode:@"ProjectTreeSecondStatic"]];
+		[self.navigationController pushViewController:firstListController animated:YES];
+		[firstListController release];		
+	#else 
+		
+		isMyHotelOrClub = NO;
+		isMyItinerary = NO;
+		shouldLoadMyAccountView = YES;
+		shouldLoadIntinerayView = YES;
+		
+		if (appDelegate.isLoggedIn == YES) {
+			NSUserDefaults *prefs = [NSUserDefaults standardUserDefaults];
+			#if defined(HOTEL_VERSION)
+				self.folioid = [prefs stringForKey:@"FolioId"];
+				self.guestpin = [prefs stringForKey:@"GuestPin"];
+			#elif defined(CLUB_VERSION)
+
+			#endif	
+             //------------comman in both club and hotel app
+            self.emailAddress = [prefs stringForKey:EmailAddressKey];
+            self.password = [prefs stringForKey:PasswordKey];
+            self.customerId = [prefs stringForKey:CustomerIdKey];
+            self.customerGUID = [prefs stringForKey:CustomerGUIDKey];				
+            self.startDate = [prefs stringForKey:@"StartDate"];
+            self.endDate = [prefs stringForKey:@"EndDate"];
+			//------------
+			#if defined(HOTEL_VERSION)	
+            [self loadMyGroupDateSelectionView];
+			#elif defined(CLUB_VERSION)
+	
+            //Call this service all time to get updated data
+            [self.navigationController.view addSubview:appDelegate.activityIndicator.view];
+            [appDelegate.activityIndicator.activity startAnimating];
+            [self fetchClubAccountsRequest];
+			#endif
+		}			
+		else if(appDelegate.connectedToInternet) {
+			[self showLoginPopup];
+			isClubMyAccount = YES;
+			isClubMyItinerary = NO;
+		}
+		else {
+			[self showOfflineAlert];
+		}			
+	#endif
+}
+
+#pragma mark Alerts
+
+-(void) showLoginPopup
+{  
+    LoginOptions = [[LoginActionSheet alloc]initWithNibName:@"LoginActionSheet" bundle:[NSBundle mainBundle]];
+    
+   loginNavigation = [[UINavigationController alloc]initWithRootViewController:LoginOptions];
+    [loginNavigation.navigationBar setBarStyle:UIBarStyleBlackTranslucent];
+    [LoginOptions setTitle:loginOption_screen_title];
+    [LoginOptions setDelegate:self];
+    [LoginOptions release];
+    [self.tabBarController presentModalViewController:loginNavigation animated:YES];
+    [loginNavigation release];
+ 
+}
+
+-(void) showOfflineAlert
+{
+//	offlineAlert = [[UIAlertView alloc] init];
+	
+	#if defined(CLUB_VERSION)
+	if (isMyItinerary)
+	#endif	
+		offlineAlert = [[UIAlertView alloc] initWithTitle:POPUP_Offline_Mode
+										   message:POPUP_Offline_Content	
+										  delegate:self
+								 cancelButtonTitle:POPUP_Button_Cancel 
+								 otherButtonTitles:POPUP_Button_Ok, nil];
+	#if defined(CLUB_VERSION)
+	else {
+		offlineAlert = [[UIAlertView alloc] initWithTitle:POPUP_Offline_Mode
+										   message:POPUP_Offline_Content_Unavailable
+										  delegate:self
+								 cancelButtonTitle:POPUP_Button_Ok 
+								 otherButtonTitles:nil];
+	}
+	#endif
+	
+	[offlineAlert show];
+	[offlineAlert release];
+}
+
+-(void) showLogoutAlert
+{
+    //////////////////////logout screen test//////////////
+    LogoutScreen *logout = [[LogoutScreen alloc]initWithNibName:@"LogoutScreen" bundle:[NSBundle mainBundle]];
+    UINavigationController *logoutNavigation = [[UINavigationController alloc]initWithRootViewController:logout];
+    [logoutNavigation.navigationBar setBarStyle:UIBarStyleBlackTranslucent];
+    //logoutNavigation.navigationBar.alpha = 0.70;
+    [logout setTitle:LOGOUT_SCREEN_TITLE];
+    [logout setDelegate:self];
+    [logout release];
+    [self.tabBarController presentModalViewController:logoutNavigation animated:YES];
+    [logoutNavigation release];
+}
+
+//Fetch the Guest Intinerary if the OK button clicked.
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+	// Clicked the OK button
+	if (buttonIndex != [alertView cancelButtonIndex]) {
+		if ([alertView isKindOfClass:[Authentication class]]) {
+			//get the input from the user and pass the parameters to the function			
+			//[self.view addSubview:appDelegate.activityIndicator.view];
+            [self.navigationController.view addSubview:appDelegate.activityIndicator.view];
+			[appDelegate.activityIndicator.activity startAnimating];
+			
+		#if defined(HOTEL_VERSION)
+			self.folioid = popup.txtFieldPMSFolioId.text;
+			self.guestpin = popup.txtFieldGuestPin.text;			
+			[self getItinerary:self.folioid GuestPin:self.guestpin];			
+		#elif defined(CLUB_VERSION)
+			self.emailAddress = popup.txtFieldPMSFolioId.text;
+			self.password = popup.txtFieldGuestPin.text;			
+			[self authenticateCustomer:self.emailAddress  Password:self.password];			
+		#endif		
+			self.navigationController.navigationBar.userInteractionEnabled = NO;		
+		} 
+		else if (alertView == offlineAlert) {   //why parsing is needed here for oofline alert
+			if (parserItineraryObj) {
+				[parserItineraryObj release];
+			}
+			 parserItineraryObj = [[RSMyItineraryParser alloc] init];
+			 parserItineraryObj.delegate = self;
+			
+			NSString *filePathDocumentDir = [self.documentDirPath stringByAppendingString:@"/MyItineraryResponseXML.txt"];
+			
+			BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:filePathDocumentDir];
+		
+			NSString *offlineTxtFilePath;
+			
+			if (fileExists) {
+				offlineTxtFilePath = filePathDocumentDir;
+				
+				NSMutableData *offlineData = [[NSMutableData alloc] initWithContentsOfFile:offlineTxtFilePath];
+				[parserItineraryObj parse:offlineData];
+				[offlineData release];
+			}
+		}
+		else if (alertView == signoutAlert) {
+			appDelegate.isLoggedIn = NO;
+			
+			#if defined(HOTEL_VERSION)
+			{
+				NSUserDefaults *prefs = [NSUserDefaults standardUserDefaults];
+				// saving a email address and password
+				[prefs setObject:@"" forKey:@"FolioId"];
+				[prefs setObject:@"" forKey:@"GuestPin"];
+				[prefs setBool:appDelegate.isLoggedIn forKey:LoggedInKey];
+				[prefs synchronize];
+			}
+			#elif defined(CLUB_VERSION)
+			{
+				NSUserDefaults *prefs = [NSUserDefaults standardUserDefaults];
+				// saving a email address and password
+				[prefs setObject:@"" forKey:EmailAddressKey];
+				[prefs setObject:@"" forKey:PasswordKey];
+				[prefs setObject:@"" forKey:CustomerIdKey];
+				[prefs setObject:@"" forKey:CustomerGUIDKey];
+				[prefs setObject:@"" forKey:@"StartDate"];
+				[prefs setObject:@"" forKey:@"EndDate"];
+				[prefs setObject:@"" forKey:AuthorizationIdKey];
+                
+				[prefs setBool:appDelegate.isLoggedIn forKey:LoggedInKey];
+				[prefs synchronize];
+			}
+			#endif	
+			
+			if (self.navigationController.tabBarController.selectedIndex == 1) {
+				[self showUpdatedLoginButton:appDelegate.isLoggedIn 
+								onController:[[[appDelegate.tabBarController.viewControllers objectAtIndex:1]viewControllers] objectAtIndex:0]];
+			}
+			else {
+				[self showUpdatedLoginButton:appDelegate.isLoggedIn 
+								onController:self.navigationController.visibleViewController];
+			}		
+			
+			//Pop to Main Page on click on OK button
+			if (!isMyHotelOrClub) {
+				appDelegate.tabBarController.selectedIndex =0;
+				[self.navigationController popToViewController:self animated:YES];
+			}			
+            
+            //[ResortSuiteAppDelegate releaseAllParserObjects];
+
+		}
+	}
+	else if (buttonIndex == [alertView cancelButtonIndex] && !isRefresh) {
+		if (alertView != signoutAlert) {
+			//Assign the last tab bar selected index to the current index on Sign Out cancel button
+			appDelegate.tabBarController.selectedIndex = appDelegate.prevSelectedIndex; 
+		}	
+	}
+}
+#pragma mark Custom login actionsheet animation config method
+-(void)doAnimation
+{
+    [UIView beginAnimations:nil context:nil];
+    [UIView setAnimationDuration:0.3];
+    [UIView setAnimationDelay:0.1];
+    [UIView setAnimationCurve:UIViewAnimationCurveEaseInOut];
+    
+}
+
+#pragma mark - Custom login actionsheetLoginView Delegate Methods
+
+
+-(void)ActionSheet:(LoginActionSheet *)actionSheet buttonSelectedAtindex:(int)buttonIndex
+{
+    DLog(@"button hit at index: %d",buttonIndex);
+    switch (buttonIndex) {
+        case signIn:
+        {
+            //remove the login navigation bar that was added om the tabbarcontroller
+            [loginNavigation dismissModalViewControllerAnimated:YES];
+            
+            DLog(@"username is %@",actionSheet.txtFieldPMSFolioId.text);
+            DLog(@"password is %@",actionSheet.txtFieldGuestPin.text);
+            //get the input from the user and pass the parameters to the function			
+           
+            [self.navigationController.view addSubview:appDelegate.activityIndicator.view];
+            [appDelegate.activityIndicator.activity startAnimating];
+            
+	
+//---------********************************************--------------------------
+            //authentication flow are same in the hotel and club App.
+            self.emailAddress = actionSheet.txtFieldPMSFolioId.text;
+            self.password = actionSheet.txtFieldGuestPin.text;			
+            [self authenticateCustomer:self.emailAddress  Password:self.password];			
+
+            self.navigationController.navigationBar.userInteractionEnabled = NO;
+        }
+            break;
+        case forgotPassword:
+        {
+            //Assign the last tab bar selected index to the current index on Sign Out cancel button
+            appDelegate.tabBarController.selectedIndex = appDelegate.prevSelectedIndex;
+        }
+            break;
+        case newUser:
+        {
+            //Assign the last tab bar selected index to the current index on Sign Out cancel button
+            appDelegate.tabBarController.selectedIndex = appDelegate.prevSelectedIndex;
+        }
+            break;
+        case cancel:
+        {
+            //Assign the last tab bar selected index to the current index on Sign Out cancel button
+            appDelegate.tabBarController.selectedIndex = appDelegate.prevSelectedIndex;
+            [loginNavigation dismissModalViewControllerAnimated:YES];
+        }
+            break;
+            
+        default:
+            break;
+    }
+    
+}
+
+#pragma mark - Logout Action sheet Delegate methods
+-(void)logoout:(LogoutScreen *)actionSheet buttonSelectedAtindex:(int)buttonIndex
+{
+    switch (buttonIndex) {
+        case Logout_ok:
+        {
+            appDelegate.isLoggedIn = NO;
+            //same for hotel and club
+            NSUserDefaults *prefs = [NSUserDefaults standardUserDefaults];
+            // saving a email address and password
+            [prefs setObject:@"" forKey:EmailAddressKey];
+            [prefs setObject:@"" forKey:PasswordKey];
+            [prefs setObject:@"" forKey:CustomerIdKey];
+            [prefs setObject:@"" forKey:CustomerGUIDKey];
+            [prefs setObject:@"" forKey:@"StartDate"];
+            [prefs setObject:@"" forKey:@"EndDate"];
+            [prefs setObject:@"" forKey:AuthorizationIdKey];
+            
+            [prefs setBool:appDelegate.isLoggedIn forKey:LoggedInKey];
+            [prefs synchronize];
+            //break;
+        }            
+            //new flow// simply set tab = 0 and poop to root 
+            
+            [actionSheet dismissModalViewControllerAnimated:YES];
+            [self showUpdatedLoginButton:appDelegate.isLoggedIn onController:self];
+            appDelegate.tabBarController.selectedIndex = 0;
+            [self.navigationController popToViewController:self animated:YES];
+
+            break;
+            
+            
+        case Logout_changePassword:
+        {
+            
+            DLog(@"change pasword screen");
+            ChangePassword *changePassword = [[ChangePassword alloc]initWithNibName:@"ChangePassword" bundle:[NSBundle mainBundle]];
+            //
+            [changePassword setTitle:CHANGE_PASSWORD_VIEW_TITLE];
+            [actionSheet.navigationController pushViewController:changePassword animated:YES];
+            [changePassword release];
+
+                break;
+        }
+        case Logout_cancel:
+        {
+            [actionSheet dismissModalViewControllerAnimated:YES];
+        }
+        default:
+            break;
+    }
+
+}
+
+#pragma mark Load Views
+
+//Load the My Itinerary view with details
+-(void) loadMyItineraryView
+{
+	if (!isRefresh) {       
+		RSMIMainScreenViewController*mRSMIMainScreenViewController = [[RSMIMainScreenViewController alloc] init];
+		[self.navigationController pushViewController:mRSMIMainScreenViewController animated:YES];
+		[mRSMIMainScreenViewController release];	
+	}
+}
+//******************* not used any where yet..
+-(void)loadMyItineraryDateSelectionView
+{
+    if (!isRefresh) {       
+		RSMIDateScreenViewController*mRSMIDateScreenViewController = [[RSMIDateScreenViewController alloc] init];
+		[self.navigationController pushViewController:mRSMIDateScreenViewController animated:YES];
+		[mRSMIDateScreenViewController release];	
+	}
+}
+
+#if defined(HOTEL_VERSION)
+#if !defined HOTEL_VERSION_TWO_BUTTONS
+-(void)loadMyGroupDateSelectionView
+{
+        DLog(@"RSMGDateSelectionViewController init via buttun flow");
+		RSMGDateSelectionViewController *mRSMGDateSelectionViewController = [[RSMGDateSelectionViewController alloc] init];
+        [self.navigationController pushViewController:mRSMGDateSelectionViewController animated:YES];
+		//[mRSMGDateSelectionViewController release];	
+}
+#endif
+#endif
+//*******************
+//Load the My Group view with details
+-(void) loadMyGroupView
+{
+	if (!isRefresh) {
+		RSMGMainScreenController *mRSMGMainScreenController = [[RSMGMainScreenController alloc] init];
+        [self.navigationController pushViewController:mRSMGMainScreenController animated:YES];
+		[mRSMGMainScreenController release];	
+	}
+}
+
+
+//Load the My Account view with details
+-(void) loadMyAccountView
+{
+	if (!isRefresh) 
+    {
+		if([appDelegate.myAccParser.clubAccounts.accounts count] > oneAccount){
+			RSListAccountsViewController *mRSListAccountsViewController = [[RSListAccountsViewController alloc] init];
+			[self.navigationController pushViewController:mRSListAccountsViewController animated:YES];
+			[mRSListAccountsViewController release];	
+		}
+		else {
+			appDelegate.currentAccountID = 0;
+			RSAccountActivityViewController *mRSAccountActivityViewController = [[RSAccountActivityViewController alloc] init];
+			[self.navigationController pushViewController:mRSAccountActivityViewController animated:YES];   
+			[mRSAccountActivityViewController release];	
+		}
+	}
+}
+
+//#if defined(CLUB_VERSION)
+-(void) loadDateViewCotroller   //date view controller for mu itinerary
+{
+    DLog(@"RSMIDateSelectionViewController init via buttun flow");
+	RSMIDateSelectionViewController *dateSelectionViewController = [[RSMIDateSelectionViewController alloc] init];
+	[self.navigationController pushViewController:dateSelectionViewController animated:YES];
+	//[dateSelectionViewController release];
+}
+//#endif
+
+#pragma mark View's Delegat Methods
+static BOOL splashScreen = YES;		//Currently splash screen is implemented for CLUB
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+	isRefresh = NO;
+	
+	[appDelegate.activityIndicator.activity stopAnimating];
+	[appDelegate.activityIndicator.view removeFromSuperview];
+	self.navigationController.navigationBar.userInteractionEnabled = YES;
+    if(splashScreen){
+
+		splashVC = [[DisplaySplashScreenViewController alloc] initWithNibName:@"DisplaySplashScreenViewController" bundle:[NSBundle mainBundle]];
+		
+	
+        
+		[self presentModalViewController:splashVC animated:NO];
+        
+
+	}
+
+
+}
+-(void)removeSplashScreen
+{
+    if(splashScreen) {
+        splashScreen = NO;
+        splashVC.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
+        [splashVC dismissModalViewControllerAnimated:YES];
+    }
+
+}
+
+
+
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    [self showUpdatedLoginButton:appDelegate.isLoggedIn onController:self.navigationController.visibleViewController];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+	isRefresh = NO;
+	
+	[appDelegate.activityIndicator.activity stopAnimating];
+	[appDelegate.activityIndicator.view removeFromSuperview];
+	self.navigationController.navigationBar.userInteractionEnabled = YES;
+}
+
+- (void)viewDidDisappear:(BOOL)animated {
+    [super viewDidDisappear:animated];
+}
+
+
+// Override to allow orientations other than the default portrait orientation.
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
+    // Return YES for supported orientations.
+    return (interfaceOrientation == UIInterfaceOrientationPortrait || interfaceOrientation == UIInterfaceOrientationPortraitUpsideDown );
+}
+
+-(void) getItinerary:(NSString *) PMSFolioId GuestPin:(NSString *) GuestPin
+{
+	NSString *requestBody = [NSString stringWithFormat: 
+							 @"<rsap:FetchGuestItineraryRequest>"
+                             "<Source>IPHONE</Source>"
+							 "<PMSFolioId>%@</PMSFolioId>"
+							 "<GuestPin>%@</GuestPin>"
+							 "</rsap:FetchGuestItineraryRequest>",PMSFolioId, GuestPin];
+	
+	[self fetchDataForRequestWithBody:requestBody];
+	self.navigationController.navigationBar.userInteractionEnabled = NO;
+}
+
+//---------********************************************--------------------------
+//authentication flow are same in the hotel and club App.
+-(void) authenticateCustomer:(NSString *) EmailAddress Password:(NSString *) Password
+{
+	//Auth Customer request
+	NSString *requestBody = [NSString stringWithFormat: 
+							 @"<rsap:AuthCustomerRequest>"
+                             "<Source>IPHONE</Source>"
+							 "<EmailAddress>%@</EmailAddress>"
+							 "<Password>%@</Password>"
+							 "</rsap:AuthCustomerRequest>",EmailAddress, Password];
+	
+	[self fetchDataForRequestWithBody:requestBody];
+	self.navigationController.navigationBar.userInteractionEnabled = NO;
+}
+
+#if defined(CLUB_VERSION)
+-(void) fetchClubAccountsRequest
+{
+	#if	!defined ALL_VERSIONS_SECOND_STATIC
+	NSString *requestBody = [NSString stringWithFormat: 
+							 @"<rsap:FetchClubAccountsRequest>"
+                             "<Source>IPHONE</Source>"
+							 "<CustomerId>%@</CustomerId>"
+							 "<CustomerGUID>%@</CustomerGUID>"
+							 "<EmailAddress>%@</EmailAddress>"
+							 "<Password>%@</Password>"
+							 "</rsap:FetchClubAccountsRequest>",
+							 self.customerId, 
+							 self.customerGUID,
+							 self.emailAddress, 
+							 self.password];
+	
+	[self fetchDataForRequestWithBody:requestBody];
+	self.navigationController.navigationBar.userInteractionEnabled = NO;
+	#endif
+}
+#endif
+
+#pragma mark Common method for creating soap request
+-(void) fetchDataForRequestWithBody:(NSString *) bodyString
+{
+	SoapRequests *soapRequest = [[SoapRequests alloc] init];
+	NSString *soapString = [soapRequest createSoapRequestForBody:bodyString];
+	[soapRequest release];
+	
+	RSConnection *connection = [RSConnection sharedInstance];
+	connection.delegate = self;
+	
+	[connection	postDataToServer:soapString];
+    
+    DLog(@" request body: %@",soapString);
+}
+
+#pragma mark RSConnection delegate
+-(void)responseReceived:(NSMutableData *)dataFromWS
+{
+	if (self.responseString) {		
+        self.responseString = nil;
+	}
+	responseString = [[NSString alloc] initWithData:dataFromWS encoding:NSUTF8StringEncoding];
+    DLog(@"responseString ===== \n%@",responseString);
+	if ([self.responseString rangeOfString:@"FetchClubAccountsResponse"].length > 0) {
+		if (self.parserMyAccObj) {
+            self.parserMyAccObj = nil;
+		}
+		parserMyAccObj = [[RSMyAccountParser alloc] init];
+		parserMyAccObj.delegate = self;
+		[parserMyAccObj parse:dataFromWS];
+	}
+	else {
+		if (self.parserItineraryObj) {
+            self.parserItineraryObj = nil;
+		}
+		parserItineraryObj = [[RSMyItineraryParser alloc] init];    //class also used to authenticate user 
+		parserItineraryObj.delegate = self;
+		[parserItineraryObj parse:dataFromWS];
+	}
+    [responseString release];
+    responseString = nil;
+}
+
+#pragma mark RSParseBase delegate
+-(void)parsingComplete:(id)parserModelData
+{	
+	if([appDelegate.activityIndicator.activity isAnimating]) {
+		[appDelegate.activityIndicator.activity stopAnimating];
+		[appDelegate.activityIndicator.view removeFromSuperview];
+	}
+	
+	if ([parserModelData isKindOfClass:[Result class]]) {
+		[self showErrorMessage:parserModelData];
+	}
+	else if ([parserModelData isKindOfClass:[AuthCustomer class]]){
+		[self authenticationSuccess:parserModelData];
+	}
+    #if defined(CLUB_VERSION)
+	else if ([parserModelData isKindOfClass:[RSClubAccounts class]]){
+		[self clubAccountsDataReceived:parserModelData];
+	}	
+	#endif
+	else {
+		//Exception handling if WS gives an exception
+		ErrorPopup *errorPopup = [ErrorPopup sharedInstance];
+		if (appDelegate.tabBarController.selectedIndex == 2 || self.isClubMyItinerary) {
+			if (appDelegate.isLoggedIn) {
+				[errorPopup initWithTitle:POPUP_No_Bookings];
+			}					
+		}
+		else {
+			[errorPopup initWithTitle:@"Fault"];
+		}
+	}	
+}
+
+#pragma mark processing of the data received after parsing
+-(void) showErrorMessage:(id)parserModelData
+{
+	self.navigationController.navigationBar.userInteractionEnabled = YES;
+	 
+	 appDelegate.myItineraryParser.errorResult = (Result *) parserModelData;
+	 
+	 if (appDelegate.connectedToInternet) {
+		 NSString *errorMessage = [NSString stringWithFormat:@"%@", appDelegate.myItineraryParser.errorResult.resultText];
+		 
+		 ErrorPopup *errorPopup = [ErrorPopup sharedInstance];
+		 [errorPopup initWithTitle:errorMessage];
+		 
+		 if(!isRefresh) {
+			 appDelegate.tabBarController.selectedIndex = 0; 
+		 }
+	 }
+}
+
+//---------********************************************--------------------------
+//authentication flow are same in the hotel and club App.
+-(void) authenticationSuccess:(id) parserModelData
+{
+
+	self.navigationController.navigationBar.userInteractionEnabled = NO;
+	appDelegate.myItineraryParser.authCustomer = (AuthCustomer *) parserModelData;  //save the authcustomer object in the appdelegate
+	
+	if (appDelegate.myItineraryParser.authCustomer.authResult.resultValue == SUCCESS) {
+		if(appDelegate.connectedToInternet)	{
+			appDelegate.isLoggedIn = YES;
+		}
+        //update the login button of the visible controller
+        [self showUpdatedLoginButton:appDelegate.isLoggedIn onController:self]; //when through button
+		[self showUpdatedLoginButton:appDelegate.isLoggedIn
+                        onController:self.navigationController.visibleViewController];//for other case
+		
+		NSUserDefaults *prefs = [NSUserDefaults standardUserDefaults];
+		// saving a email address and password
+		[prefs setObject:self.emailAddress forKey:EmailAddressKey];
+		[prefs setObject:self.password forKey:PasswordKey];
+		[prefs setObject:appDelegate.myItineraryParser.authCustomer.customerId forKey:CustomerIdKey];
+		[prefs setObject:appDelegate.myItineraryParser.authCustomer.customerGUID forKey:CustomerGUIDKey];
+		[prefs setObject:appDelegate.myItineraryParser.authCustomer.authorizationId forKey:AuthorizationIdKey];
+        [prefs setObject:appDelegate.myItineraryParser.authCustomer.guaranteed forKey:GuaranteedKey];
+        //
+		[prefs setBool:appDelegate.isLoggedIn forKey:LoggedInKey];
+		
+		[prefs synchronize];	
+		
+		self.customerId = [prefs stringForKey:CustomerIdKey];
+		self.customerGUID = [prefs stringForKey:CustomerGUIDKey];
+		self.authorizationId = [prefs stringForKey:AuthorizationIdKey];
+		
+		[appDelegate.activityIndicator.activity stopAnimating];
+		[appDelegate.activityIndicator.view removeFromSuperview];
+	}
+    
+    #if defined(CLUB_VERSION)
+	if (isClubMyItinerary) {    //to check which button is selected is selected
+        isClubMyItinerary = NO;
+        [self loadDateViewCotroller];
+        
+	}
+	else if (isClubMyAccount) {
+        isClubMyAccount = NO;
+		[self fetchClubAccountsRequest];
+	}
+    #if !defined CLUB_VERSION_TWO_MYACCOUNT
+    else if(appDelegate.presentSelectedTab == MY_ITINERARY_TAB) //if flow is from the tab reload the tab controller
+    {
+        RSMIDateSelectionViewController *dateSelectionViewController = [[RSMIDateSelectionViewController alloc] init];
+        [appDelegate createNavControllerWithRootController:dateSelectionViewController withTabTitle:RSClubItineraryTabTitle TabImageName:RSSelfTabIcon tabTag:MY_ITINERARY_TAB];
+        appDelegate.tabBarController.selectedIndex = MY_ITINERARY_TAB;
+        [dateSelectionViewController release];
+    }
+    #endif
+    else if(appDelegate.presentSelectedTab == MY_GROUP_ACCOUNT_TAB) //if flow is from the tab reload the tab controller
+    {
+        [self fetchClubAccountsRequest];
+    }
+    
+    #endif
+    
+    #if defined(HOTEL_VERSION)  
+    // decide the action in hotel app after succesful authorization
+    // nothing need to be done as the tab controller will handle further action itself.
+    DLog(@"AUTHORIZATION SUCCESFUL IN HOTEL APP");
+    //set variable on the button click and load the specific VC
+    if (isClubMyItinerary) {    //to check which button is selected is selected
+        isClubMyItinerary = NO;
+        [self loadDateViewCotroller];     
+	}
+	else if (isClubMyAccount) {
+		//load the group date selection vc
+        isClubMyAccount = NO;
+        [self loadMyGroupDateSelectionView];       
+	}
+    //tab controller can handle themself as the controller is not to be changed dynamically
+    else if(appDelegate.presentSelectedTab == MY_ITINERARY_TAB) //if flow is from the tab reload the tab controller
+    {
+        RSMIDateSelectionViewController *dateSelectionViewController = [[RSMIDateSelectionViewController alloc] init];
+        [appDelegate createNavControllerWithRootController:dateSelectionViewController withTabTitle:RSHotelSelfTabTitle TabImageName:RSSelfTabIcon tabTag:MY_ITINERARY_TAB];
+        appDelegate.tabBarController.selectedIndex = MY_ITINERARY_TAB;
+        [dateSelectionViewController release];
+        
+    }
+    #if !defined HOTEL_VERSION_TWO_BUTTONS  //new flow
+    //{
+    else if(appDelegate.presentSelectedTab == MY_GROUP_ACCOUNT_TAB) //if flow is from the tab reload the tab controller
+    {
+        RSMGDateSelectionViewController *GRDateviewCntrl = [[RSMGDateSelectionViewController alloc] init];
+        [appDelegate createNavControllerWithRootController:GRDateviewCntrl withTabTitle:RSHotelMyGroupTabTitle TabImageName:RSGroupTabIcon tabTag:MY_GROUP_ACCOUNT_TAB];
+        appDelegate.tabBarController.selectedIndex = MY_GROUP_ACCOUNT_TAB;
+        [GRDateviewCntrl release];
+    }
+    //}
+    #endif
+    #endif
+    
+}
+#if defined(CLUB_VERSION)
+-(void) clubAccountsDataReceived:(id) parserModelData
+{
+    //should check if the flow is from button or from tab
+	self.navigationController.navigationBar.userInteractionEnabled = YES;
+	appDelegate.myAccParser.clubAccounts = (RSClubAccounts *) parserModelData;
+	
+	if (appDelegate.myAccParser.clubAccounts.clubResult.resultValue == SUCCESS) {
+		if(appDelegate.connectedToInternet)	{
+			appDelegate.isLoggedIn = YES;
+		}
+		NSUserDefaults *prefs = [NSUserDefaults standardUserDefaults];
+		// saving a email address and password
+		[prefs setObject:self.emailAddress forKey:EmailAddressKey];
+		[prefs setObject:self.password forKey:PasswordKey];
+		[prefs setObject:self.customerId forKey:CustomerIdKey];
+		[prefs setObject:self.customerGUID forKey:CustomerGUIDKey];
+		//[prefs setObject:self.authorizationId forKey:@"AuthorizationId"];
+        
+		[prefs setBool:appDelegate.isLoggedIn forKey:LoggedInKey];
+		[prefs synchronize];
+		
+        //Need to check My Account called by Main screen button or by Tab bar button
+        //In else, only check for multiple records to change the controller in Tab, for single record it is already loaded in tab controller
+		if (shouldLoadMyAccountView) 
+        {//for button flow
+			[self loadMyAccountView];
+            shouldLoadMyAccountView = NO;   //value once used should be brought back to its initialstate
+		}								
+        else if([appDelegate.myAccParser.clubAccounts.accounts count] > oneAccount)
+        {//for tab flow
+            //Load RSListAccountsViewController on from the tab bar button pressed
+            RSListAccountsViewController *listVC = [[RSListAccountsViewController alloc] init];
+            [appDelegate createNavControllerWithRootController:listVC withTabTitle:RSClubMyAccountTabTitle TabImageName:RSGroupTabIcon tabTag:MY_GROUP_ACCOUNT_TAB];
+            appDelegate.tabBarController.selectedIndex = MY_GROUP_ACCOUNT_TAB;
+            [listVC release];
+        }
+        else // for single or no mebership while tab flow
+        {
+            RSAccountActivityViewController *mRSAccountActivityViewController = [[RSAccountActivityViewController alloc] init];
+            [appDelegate createNavControllerWithRootController:mRSAccountActivityViewController withTabTitle:RSClubMyAccountTabTitle TabImageName:RSGroupTabIcon tabTag:MY_GROUP_ACCOUNT_TAB];
+            appDelegate.tabBarController.selectedIndex = MY_GROUP_ACCOUNT_TAB;
+            [mRSAccountActivityViewController release];
+        }
+	}	
+}
+#endif
+
+#pragma mark Write content to the file
+-(void) writeToFile:(NSString *) filePath contents:(NSString *) fileContent
+{
+	// Write string to file
+	[fileContent writeToFile:filePath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+}
+
+#pragma mark -
+#pragma mark Memory management
+
+- (void)didReceiveMemoryWarning {
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+    
+    // Relinquish ownership any cached data, images, etc. that aren't in use.
+}
+
+- (void)viewDidUnload {
+    // Relinquish ownership of anything that can be recreated in viewDidLoad or on demand.
+    // For example: self.myOutlet = nil;
+    [self.navigationController setDelegate:nil];
+}
+
+
+- (void)dealloc {
+    DLog(@"RSMainViewController released---------------");
+	[parserItineraryObj release];
+	[responseString release];
+	[documentDirPath release];
+    
+		[folioid release];
+		[guestpin release];
+
+		[emailAddress release];
+		[password release];
+		[customerId release];
+		[customerGUID release];
+		[startDate release];
+		[endDate release];
+        [authorizationId release];
+	
+	
+	[parserMyAccObj release];
+     
+	[super dealloc];
+}
+
+@end
+

@@ -1,0 +1,94 @@
+/* 
+  Localizable.strings
+  ResortSuite
+
+  Created by Cybage on 9/5/12.
+  Copyright (c) 2012 Cybage. All rights reserved.
+*/
+
+// Home Page
+
+"RSHomeTabTitle" = "Home";
+"RSMyHotelTabTitle" = "My Hotel";
+"RSMyClubTabTitle"  = "My Club";
+
+"RSHotelSelfTabTitle" = "Self";
+"RSClubItineraryTabTitle" = "My Itinerary";
+
+"RSHotelMyGroupTabTitle" = "My Group";
+"RSClubMyAccountTabTitle" = "My Account";
+
+"RSBookingTabTitle" = "Book";
+"RSStaticTabTitle" = "My Static";
+
+"RsGallaryTitle" = "Gallery";
+
+//---------- RSTeaserBuildConstant --------------------------//
+
+//Application Header Name
+"Hotel_Application_Title"  =   "Brentwood Bay Resort";
+
+//My Hotel Home Screen Buttons Name
+
+"IF_Club/Hotel_Two_Buttons_Hotel_Button1_Title1"  =   "My Hotel";
+"IF_Club/Hotel_Two_Buttons_Hotel_Button1_Title2"  =   "";
+"IF_Club/Hotel_Two_Buttons_Hotel_Button2_Title1"  =   "My Itinerary";
+"IF_Club/Hotel_Two_Buttons_Hotel_Button2_Title2"  =   "";
+
+"Hotel_Button1_Title1"	=   "My";
+"Hotel_Button1_Title2"  =   "Hotel";
+"Hotel_Button2_Title1" =    "My";
+"Hotel_Button2_Title2" =    "Itinerary";
+
+"IF_ALL_VERSIONS_SECOND_STATIC_Hotel_Button3_Title1" = "My";
+"IF_ALL_VERSIONS_SECOND_STATIC_Hotel_Button3_Title2" = "Static";
+"Hotel_Button3_Title1" = "My";
+"Hotel_Button3_Title2" = "Group";
+
+
+//Hotel Information
+"Hotel_Map_Address" = "849 Verdier Avenue, Victoria, BC V8M 1C5";	
+
+//////////////////////////////////////////////////////////////////////////////
+//Titles for Club application
+//////////////////////////////////////////////////////////////////////////////
+
+//Application Header Name
+#define Club_Application_Title					@"Washington Athletic Club"
+
+//My Club Home Screen Buttons Name
+
+#if (defined CLUB_VERSION_TWO_MYACCOUNT	|| defined HOTEL_VERSION_TWO_BUTTONS)
+"IF_Club/Hotel_Two_Buttons_Club_Button1_Title1" = "My Club";
+"IF_Club/Hotel_Two_Buttons_Club_Button1_Title2"	= "";
+"IF_Club/Hotel_Two_Buttons_Club_Button2_Title1"	= "My Itinerary";
+"IF_Club/Hotel_Two_Buttons_Club_Button2_Title2" = "";
+#else
+"Club_Button1_Title1" = "My";
+"Club_Button1_Title2" = "Club";
+"Club_Button2_Title1" = "My";
+"Club_Button2_Title2" = "Itinerary";
+#endif	
+
+#if defined (ALL_VERSIONS_SECOND_STATIC)
+"IF_ALL_VERSIONS_SECOND_STATIC_Club_Button3_Title1" = "My";
+"IF_ALL_VERSIONS_SECOND_STATIC_Club_Button3_Title2" = "Static";
+#else
+#if (defined CLUB_VERSION_TWO_MYACCOUNT)
+"If_CLUB_VERSION_TWO_MYACCOUNT_Club_Button3_Title1" = "My Account";
+"If_CLUB_VERSION_TWO_MYACCOUNT_Club_Button3_Title2" = "";
+#else	
+"Club_Button3_Title1" = "My";
+"Club_Button3_Title2" = "Account";
+#endif
+#endif
+
+//Itinerary
+"Club_Dining_Title" = "Dining";
+"Club_SPA_Title" = "Spa";
+"Club_Athletics_Title" = "Athletics";
+
+//Club Information
+"Club_Map_Address" = "1325 6th Ave. Seattle, WA 98101";
+
+

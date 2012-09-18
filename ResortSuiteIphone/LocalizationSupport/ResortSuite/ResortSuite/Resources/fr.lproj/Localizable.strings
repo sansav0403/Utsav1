@@ -1,0 +1,50 @@
+/* 
+  Localizable.strings
+  ResortSuite
+
+  Created by Basant Sarda on 9/5/12.
+  Copyright (c) 2012 Cybage. All rights reserved.
+*/
+
+// Home Page
+"RSHomeTabTitle" = "fr_Home";
+"RSMyHotelTabTitle" = "fr_My Hotel";
+"RSMyClubTabTitle"  = "fr_My Club";
+
+"RSHotelSelfTabTitle" = "fr_Self";
+"RSClubItineraryTabTitle" = "fr_My Itinerary";
+
+"RSHotelMyGroupTabTitle" = "fr_My Group";
+"RSClubMyAccountTabTitle" = "fr_My Account";
+
+"RSBookingTabTitle" = "fr_Book";
+"RSStaticTabTitle" = "fr_My Static";
+
+"RsGallaryTitle" = "fr_Gallery";
+
+//---------- RSTeaserBuildConstant --------------------------//
+
+//Application Header Name
+"Hotel_Application_Title"  =   "fr_Brentwood Bay Resort";
+
+//My Hotel Home Screen Buttons Name
+
+"IF_Club/Hotel_Two_Buttons_Hotel_Button1_Title1"  =   "fr_My Hotel";
+"IF_Club/Hotel_Two_Buttons_Hotel_Button1_Title2"  =   "";
+"IF_Club/Hotel_Two_Buttons_Hotel_Button2_Title1"  =   "fr_My Itinerary";
+"IF_Club/Hotel_Two_Buttons_Hotel_Button2_Title2"  =   "";
+
+"Hotel_Button1_Title1"	=   "fr_My";
+"Hotel_Button1_Title2"  =   "fr_Hotel";
+
+"Hotel_Button2_Title1" =    "fr_My";
+"Hotel_Button2_Title2" =    "fr_Itinerary";
+
+"IF_ALL_VERSIONS_SECOND_STATIC_Hotel_Button3_Title1" = "fr_My";
+"IF_ALL_VERSIONS_SECOND_STATIC_Hotel_Button3_Title2" = "fr_Static";
+
+"Hotel_Button3_Title1" = "fr_My";
+"Hotel_Button3_Title2" = "fr_Group";
+
+//Hotel Information
+"Hotel_Map_Address"     = "fr_849 Verdier Avenue, Victoria, BC V8M 1C5";

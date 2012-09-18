@@ -1,0 +1,101 @@
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/Mobile-COE/!svn/ver/8310/ResortSuite/iPhone/trunk/ResortSuite/ResortSuite/RSSpaBooking/RSSpaBookingParser
+END
+RSSpaServiceBookingParser.h
+K 25
+svn:wc:ra_dav:version-url
+V 138
+/svn/Mobile-COE/!svn/ver/4613/ResortSuite/iPhone/trunk/ResortSuite/ResortSuite/RSSpaBooking/RSSpaBookingParser/RSSpaServiceBookingParser.h
+END
+RSClassBookingParser.m
+K 25
+svn:wc:ra_dav:version-url
+V 133
+/svn/Mobile-COE/!svn/ver/4049/ResortSuite/iPhone/trunk/ResortSuite/ResortSuite/RSSpaBooking/RSSpaBookingParser/RSClassBookingParser.m
+END
+RSSpaAvailibilityParser.m
+K 25
+svn:wc:ra_dav:version-url
+V 136
+/svn/Mobile-COE/!svn/ver/4604/ResortSuite/iPhone/trunk/ResortSuite/ResortSuite/RSSpaBooking/RSSpaBookingParser/RSSpaAvailibilityParser.m
+END
+RSSpaServiceBookingParser.m
+K 25
+svn:wc:ra_dav:version-url
+V 138
+/svn/Mobile-COE/!svn/ver/4637/ResortSuite/iPhone/trunk/ResortSuite/ResortSuite/RSSpaBooking/RSSpaBookingParser/RSSpaServiceBookingParser.m
+END
+RSSpaCustomerConflictBookingsParser.h
+K 25
+svn:wc:ra_dav:version-url
+V 148
+/svn/Mobile-COE/!svn/ver/4552/ResortSuite/iPhone/trunk/ResortSuite/ResortSuite/RSSpaBooking/RSSpaBookingParser/RSSpaCustomerConflictBookingsParser.h
+END
+RSSpaCustomerConflictBookingsParser.m
+K 25
+svn:wc:ra_dav:version-url
+V 148
+/svn/Mobile-COE/!svn/ver/5134/ResortSuite/iPhone/trunk/ResortSuite/ResortSuite/RSSpaBooking/RSSpaBookingParser/RSSpaCustomerConflictBookingsParser.m
+END
+RSSpaServiceParser.h
+K 25
+svn:wc:ra_dav:version-url
+V 131
+/svn/Mobile-COE/!svn/ver/4049/ResortSuite/iPhone/trunk/ResortSuite/ResortSuite/RSSpaBooking/RSSpaBookingParser/RSSpaServiceParser.h
+END
+RSSpaServiceParser.m
+K 25
+svn:wc:ra_dav:version-url
+V 131
+/svn/Mobile-COE/!svn/ver/6457/ResortSuite/iPhone/trunk/ResortSuite/ResortSuite/RSSpaBooking/RSSpaBookingParser/RSSpaServiceParser.m
+END
+RSSpaLocationParser.h
+K 25
+svn:wc:ra_dav:version-url
+V 132
+/svn/Mobile-COE/!svn/ver/5916/ResortSuite/iPhone/trunk/ResortSuite/ResortSuite/RSSpaBooking/RSSpaBookingParser/RSSpaLocationParser.h
+END
+RSDailySpaClassesParser.h
+K 25
+svn:wc:ra_dav:version-url
+V 136
+/svn/Mobile-COE/!svn/ver/5916/ResortSuite/iPhone/trunk/ResortSuite/ResortSuite/RSSpaBooking/RSSpaBookingParser/RSDailySpaClassesParser.h
+END
+RSSpaStaffParser.h
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/svn/Mobile-COE/!svn/ver/4049/ResortSuite/iPhone/trunk/ResortSuite/ResortSuite/RSSpaBooking/RSSpaBookingParser/RSSpaStaffParser.h
+END
+RSSpaLocationParser.m
+K 25
+svn:wc:ra_dav:version-url
+V 132
+/svn/Mobile-COE/!svn/ver/6457/ResortSuite/iPhone/trunk/ResortSuite/ResortSuite/RSSpaBooking/RSSpaBookingParser/RSSpaLocationParser.m
+END
+RSDailySpaClassesParser.m
+K 25
+svn:wc:ra_dav:version-url
+V 136
+/svn/Mobile-COE/!svn/ver/6457/ResortSuite/iPhone/trunk/ResortSuite/ResortSuite/RSSpaBooking/RSSpaBookingParser/RSDailySpaClassesParser.m
+END
+RSSpaStaffParser.m
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/svn/Mobile-COE/!svn/ver/8310/ResortSuite/iPhone/trunk/ResortSuite/ResortSuite/RSSpaBooking/RSSpaBookingParser/RSSpaStaffParser.m
+END
+RSClassBookingParser.h
+K 25
+svn:wc:ra_dav:version-url
+V 133
+/svn/Mobile-COE/!svn/ver/5916/ResortSuite/iPhone/trunk/ResortSuite/ResortSuite/RSSpaBooking/RSSpaBookingParser/RSClassBookingParser.h
+END
+RSSpaAvailibilityParser.h
+K 25
+svn:wc:ra_dav:version-url
+V 136
+/svn/Mobile-COE/!svn/ver/5916/ResortSuite/iPhone/trunk/ResortSuite/ResortSuite/RSSpaBooking/RSSpaBookingParser/RSSpaAvailibilityParser.h
+END
