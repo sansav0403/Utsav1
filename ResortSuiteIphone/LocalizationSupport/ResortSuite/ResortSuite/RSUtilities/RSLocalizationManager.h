@@ -12,5 +12,6 @@
 
 + (RSLocalizationManager *)sharedInstance;
 + (NSString *)localizedStringForKey:(NSString *)stringKey;
++ (NSString *)localizedFileForKey:(NSString *)stringKey;
 
 @end

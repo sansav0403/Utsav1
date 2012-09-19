@@ -7,7 +7,11 @@
 //
 
 #import "RSLocalizationManager.h"
+
+#define kAppleLanguages     @"AppleLanguages"
+
 static RSLocalizationManager* sharedInstance=nil;
+
 
 @implementation RSLocalizationManager
 
@@ -38,6 +42,24 @@ static RSLocalizationManager* sharedInstance=nil;
 + (NSString *)localizedStringForKey:(NSString *)stringKey
 {
     return NSLocalizedString(stringKey, @"");     
+}
+
+/**
+*  @method     :-    localizedFileForKey 
+*  @parameter  :-    stringKey
+*  @return     :-    Localized file to support multi-language into iphone setting
+*  @description:-    This add the prefix of current language's initial to stringkey passed in   
+                     parameter for image or file name.
+*/
++ (NSString *)localizedFileForKey:(NSString *)stringKey
+{
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    NSArray *languages = [userDefaults objectForKey:kAppleLanguages];
+    NSString *currentLanguageInitial = [languages objectAtIndex:0];
+    
+    NSString *currentLanguageFile = [NSString stringWithFormat:@"%@_%@",currentLanguageInitial,stringKey]; 
+    
+    return currentLanguageFile;     
 }
 
 @end
