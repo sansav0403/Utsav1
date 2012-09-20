@@ -65,8 +65,6 @@
 
 //--------------------------------------------------------------------//
 //Pop up Error messages
-"POPUP_Error" = "";
-
 "POPUP_Sign_Out" = "fr_Sign Out";
 "POPUP_Sign_Out_Text" = "fr_Do you want to sign out?";
 "POPUP_Offline_Mode " = "fr_Offline Mode";
@@ -100,7 +98,7 @@
 "POPUP_Button_Ok" = "fr_Ok";
 "POPUP_Button_Cancel" = "fr_Cancel";
 
-"kPOPUP_Guarantee_Required" = "fr_Please contact us with your credit card information in order to guarantee your booking first.";
+"kPOPUP_Guarantee_Required" = "fr_We cannot complete your booking at this time as your account is not cinfigured with a valid guarantee. \n\nPlease contact us so we can update your account.";
 
 //----------------------------------------------//
 // ------- Account Views Title

@@ -35,6 +35,7 @@
 		2CA92F4715F794F5004171F8 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 2CA92F4215F794BD004171F8 /* Localizable.strings */; };
 		2CA92F4915F794F7004171F8 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 2CA92F4215F794BD004171F8 /* Localizable.strings */; };
 		2CA92F4A15F794F7004171F8 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 2CA92F4215F794BD004171F8 /* Localizable.strings */; };
+		2CBFC761160B642A002322F7 /* Req-To-Change.zip in Resources */ = {isa = PBXBuildFile; fileRef = 2CBFC760160B642A002322F7 /* Req-To-Change.zip */; };
 		5914385F13F2900A008E6481 /* DateFormatting.m in Sources */ = {isa = PBXBuildFile; fileRef = 5914385E13F2900A008E6481 /* DateFormatting.m */; };
 		5914386013F2900A008E6481 /* DateFormatting.m in Sources */ = {isa = PBXBuildFile; fileRef = 5914385E13F2900A008E6481 /* DateFormatting.m */; };
 		5935091013BC48E900122A99 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = D211D6C7138E547B005F4B53 /* main.m */; };
@@ -2183,6 +2184,7 @@
 		2CA92F3415F7948A004171F8 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = MainWindow_TwoButtons_Club_MyAccount.xib; sourceTree = "<group>"; };
 		2CA92F3615F7948A004171F8 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = MainWindow_TwoButtons_Club_MyItinerary.xib; sourceTree = "<group>"; };
 		2CA92F4315F794BD004171F8 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = Localizable.strings; sourceTree = "<group>"; };
+		2CBFC760160B642A002322F7 /* Req-To-Change.zip */ = {isa = PBXFileReference; lastKnownFileType = archive.zip; path = "Req-To-Change.zip"; sourceTree = "<group>"; };
 		5914385D13F2900A008E6481 /* DateFormatting.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DateFormatting.h; sourceTree = "<group>"; };
 		5914385E13F2900A008E6481 /* DateFormatting.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DateFormatting.m; sourceTree = "<group>"; };
 		59146CD91410DA6800909B08 /* ResortSuite_TwoButtons_Club_MyItinerary-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "ResortSuite_TwoButtons_Club_MyItinerary-Info.plist"; sourceTree = "<group>"; };
@@ -2934,6 +2936,7 @@
 		2CA92EE115F79395004171F8 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				2CBFC760160B642A002322F7 /* Req-To-Change.zip */,
 				2CA92F2215F7948A004171F8 /* en.lproj */,
 				2CA92F3715F7948A004171F8 /* fr.lproj */,
 			);
@@ -5217,6 +5220,7 @@
 				2CA92F4015F7948A004171F8 /* MainWindow_TwoButtons_Club_MyAccount.xib in Resources */,
 				2CA92F4115F7948A004171F8 /* MainWindow_TwoButtons_Club_MyItinerary.xib in Resources */,
 				2CA92F4415F794BD004171F8 /* Localizable.strings in Resources */,
+				2CBFC761160B642A002322F7 /* Req-To-Change.zip in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

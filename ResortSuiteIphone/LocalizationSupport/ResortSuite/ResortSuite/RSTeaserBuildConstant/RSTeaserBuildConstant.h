@@ -20,10 +20,10 @@
 
 #if (defined CLUB_VERSION_TWO_MYACCOUNT	|| defined HOTEL_VERSION_TWO_BUTTONS)
 #define Hotel_Button1_Title1					[RSLocalizationManager localizedStringForKey:@"RSMyHotelTabTitle"]
-#define Hotel_Button1_Title2					RSLocalizationManager localizedStringForKey:@"If_Club/Hotel_Two_Buttons_Hotel_Button1_Title2"]
+#define Hotel_Button1_Title2					@""
 
 #define Hotel_Button2_Title1					[RSLocalizationManager localizedStringForKey:@"RSClubItineraryTabTitle"]
-#define Hotel_Button2_Title2					[RSLocalizationManager localizedStringForKey:@"IF_Club/Hotel_Two_Buttons_Hotel_Button1_Title2"]
+#define Hotel_Button2_Title2					@""
 
 #else
 
@@ -92,10 +92,10 @@
 
 #if (defined CLUB_VERSION_TWO_MYACCOUNT	|| defined HOTEL_VERSION_TWO_BUTTONS)
 	#define Club_Button1_Title1		      [RSLocalizationManager localizedStringForKey:@"RSMyClubTabTitle"]//@"My Club"
-	#define Club_Button1_Title2				[RSLocalizationManager localizedStringForKey:@"IF_Club/Hotel_Two_Buttons_Hotel_Button1_Title2"]//@""
+	#define Club_Button1_Title2				@""
 		
 	#define Club_Button2_Title1						[RSLocalizationManager localizedStringForKey:@"RSClubItineraryTabTitle"]//@"My Itinerary"
-	#define Club_Button2_Title2						[RSLocalizationManager localizedStringForKey:@"IF_Club/Hotel_Two_Buttons_Hotel_Button1_Title2"]//@""
+	#define Club_Button2_Title2						@""
 #else
 	#define Club_Button1_Title1						[RSLocalizationManager localizedStringForKey:@"Hotel_Button1_Title1"]//@"My"
 	#define Club_Button1_Title2						[RSLocalizationManager localizedStringForKey:@"Club_Button1_Title2"]//@"Club"
@@ -110,7 +110,7 @@
 #else
 	#if (defined CLUB_VERSION_TWO_MYACCOUNT)
 		#define Club_Button3_Title1						[RSLocalizationManager localizedStringForKey:@"RSClubMyAccountTabTitle"]//@"My Account"
-		#define Club_Button3_Title2						[RSLocalizationManager localizedStringForKey:@"IF_Club/Hotel_Two_Buttons_Hotel_Button1_Title2"]//@""
+		#define Club_Button3_Title2						@""
 	#else	
 		#define Club_Button3_Title1						[RSLocalizationManager localizedStringForKey:@"Hotel_Button1_Title1"]//@"My"
 		#define Club_Button3_Title2						[RSLocalizationManager localizedStringForKey:@"Club_Button3_Title2"]//@"Account"

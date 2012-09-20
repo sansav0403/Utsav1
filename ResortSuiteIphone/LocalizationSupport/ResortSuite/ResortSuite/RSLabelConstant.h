@@ -70,7 +70,14 @@
 #define POPUP_Button_Ok                     [RSLocalizationManager localizedStringForKey:@"POPUP_Button_Ok"]//Ok"
 #define POPUP_Button_Cancel                 [RSLocalizationManager localizedStringForKey:@"POPUP_Button_Cancel"]//Cancel"
 
+
 #define kPOPUP_Guarantee_Required       [RSLocalizationManager localizedStringForKey:@"kPOPUP_Guarantee_Required"]//Please contact us with your credit card information in order to guarantee your booking first."
+
+// #define kPOPUP_Guarantee_Required       @"Please contact us with your credit card information in order to guarantee your booking first."
+//Updated Guarantee Require Message
+#define kPOPUP_Guarantee_Required       @"We cannot complete your booking at this time as your account is not cinfigured with a valid guarantee. \n\nPlease contact us so we can update your account."
+
+
 /********************************************************************/
 #pragma Mark - Error Codes
 #define kGuaranteeRequiredErrorId    1010

@@ -57,7 +57,7 @@
 "POPUP_Button_Ok" = "Ok";
 "POPUP_Button_Cancel" = "Cancel";
 
-"kPOPUP_Guarantee_Required" = "Please contact us with your credit card information in order to guarantee your booking first.";
+"kPOPUP_Guarantee_Required" = "We cannot complete your booking at this time as your account is not cinfigured with a valid guarantee. \n\nPlease contact us so we can update your account.";
 
 //----------------------------------------------//
 // ---------- Account Views Title
